@@ -20,11 +20,11 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Sử dụng Node.js bản LTS ổn định nhất
-          cache: 'npm'       # Cache lại node_modules để chạy nhanh hơn ở các lần sau
+          node-version: "20" # Sử dụng Node.js bản LTS ổn định nhất
+          cache: "npm" # Cache lại node_modules để chạy nhanh hơn ở các lần sau
 
       - name: 📦 Install Dependencies
-        run: npm ci          # Dùng npm ci thay vì npm install để cài đặt chính xác các versions trong package-lock.json
+        run: npm ci --legacy-peer-deps # Dùng npm ci thay vì npm install để cài đặt chính xác các versions trong package-lock.json
 
       - name: 🗄️ Generate Prisma Client
         run: npx prisma generate

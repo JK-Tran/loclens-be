@@ -10,14 +10,14 @@ export class PrismaUserRepository implements UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(id: string): Promise<User | null> {
-    const raw = await this.prisma.user.findUnique({ where: { id } });
+    const raw = await this.prisma.user.findFirst({ where: { id, deletedAt: null } });
     if (!raw) return null;
     return PrismaUserMapper.toDomain(raw);
   }
 
   async findByEmail(email: Email): Promise<User | null> {
-    const raw = await this.prisma.user.findUnique({
-      where: { email: email.getValue() },
+    const raw = await this.prisma.user.findFirst({
+      where: { email: email.getValue(), deletedAt: null },
     });
     if (!raw) return null;
     return PrismaUserMapper.toDomain(raw);

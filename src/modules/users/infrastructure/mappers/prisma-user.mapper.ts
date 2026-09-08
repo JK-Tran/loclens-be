@@ -7,8 +7,15 @@ export class PrismaUserMapper {
     return new User(
       raw.id,
       Email.create(raw.email),
+      raw.fullName,
+      raw.avatarUrl,
+      raw.bio,
+      raw.trustScore,
+      raw.totalReviews,
       raw.passwordHash,
-      raw.name,
+      raw.refreshToken,
+      raw.googleId,
+      raw.deletedAt,
       raw.createdAt,
       raw.updatedAt,
     );
@@ -18,8 +25,15 @@ export class PrismaUserMapper {
     return {
       id: user.id,
       email: user.email.getValue(),
+      fullName: user.fullName,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
+      trustScore: user.trustScore,
+      totalReviews: user.totalReviews,
       passwordHash: user.passwordHash,
-      name: user.name,
+      refreshToken: user.refreshToken,
+      googleId: user.googleId,
+      deletedAt: user.deletedAt,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

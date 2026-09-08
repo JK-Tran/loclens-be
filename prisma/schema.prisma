@@ -9,12 +9,110 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique @db.VarChar(255)
+  fullName     String    @map("full_name") @db.VarChar(150)
+  avatarUrl    String?   @map("avatar_url")
+  bio          String?
+  trustScore   Int       @default(100) @map("trust_score")
+  totalReviews Int       @default(0) @map("total_reviews")
+  passwordHash String?   @map("password_hash")
+  refreshToken String?   @map("refresh_token")
+  googleId     String?   @unique @map("google_id")
+  
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([email])
+  locations      Location[]
+  reviews        Review[]
+  reviewLikes    ReviewLike[]
+  savedLocations SavedLocation[]
+
+  @@map("users")
+}
+
+model Location {
+  id            String    @id @default(uuid()) @map("location_id") @db.Uuid
+  creatorUserId String    @map("creator_user_id") @db.Uuid
+  name          String    @db.VarChar(255)
+  category      String    @db.VarChar(50)
+  address       String
+  city          String    @db.VarChar(100)
+  
+  latitude      Float
+  longitude     Float
+  
+  coverImageUrl String?   @map("cover_image_url")
+  ratingAvg     Decimal   @default(0.00) @map("rating_avg") @db.Decimal(3, 2)
+  totalReviews  Int       @default(0) @map("total_reviews")
+  
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  creator        User            @relation(fields: [creatorUserId], references: [id])
+  reviews        Review[]
+  savedLocations SavedLocation[]
+
+  @@index([city])
+  @@index([latitude, longitude], name: "idx_locations_coords")
+  @@map("locations")
+}
+
+model Review {
+  id                String    @id @default(uuid()) @map("review_id") @db.Uuid
+  locationId        String    @map("location_id") @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  
+  rating            Int       @db.SmallInt
+  content           String
+  photos            String[]  @default([])
+  spentAmount       Decimal?  @map("spent_amount") @db.Decimal(12, 2)
+  
+  checkinLatitude   Float     @map("checkin_latitude")
+  checkinLongitude  Float     @map("checkin_longitude")
+  distanceMeters    Int       @map("distance_meters")
+  isVerifiedCheckin Boolean?  @default(true) @map("is_verified_checkin")
+  
+  likesCount        Int       @default(0) @map("likes_count")
+  commentsCount     Int       @default(0) @map("comments_count")
+  
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  location          Location     @relation(fields: [locationId], references: [id])
+  user              User         @relation(fields: [userId], references: [id])
+  likes             ReviewLike[]
+
+  @@index([locationId])
+  @@index([userId])
+  @@index([isVerifiedCheckin])
+  @@index([createdAt(sort: Desc)])
+  @@map("reviews")
+}
+
+model ReviewLike {
+  userId    String   @map("user_id") @db.Uuid
+  reviewId  String   @map("review_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user      User     @relation(fields: [userId], references: [id])
+  review    Review   @relation(fields: [reviewId], references: [id])
+
+  @@id([userId, reviewId])
+  @@map("review_likes")
+}
+
+model SavedLocation {
+  userId     String   @map("user_id") @db.Uuid
+  locationId String   @map("location_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user       User     @relation(fields: [userId], references: [id])
+  location   Location @relation(fields: [locationId], references: [id])
+
+  @@id([userId, locationId])
+  @@map("saved_locations")
 }

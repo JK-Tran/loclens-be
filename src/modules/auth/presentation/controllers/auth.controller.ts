@@ -1,44 +1,38 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case.js';
-import { LoginUseCase } from '../../application/use-cases/login.use-case.js';
-import { RegisterDto } from '../dto/register.dto.js';
-import { LoginDto } from '../dto/login.dto.js';
+import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthService } from '../../application/services/auth.service.js';
+import { JwtAuthGuard } from '../../infrastructure/guards/jwt-auth.guard.js';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly registerUserUseCase: RegisterUserUseCase,
-    private readonly loginUseCase: LoginUseCase,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 201, description: 'User successfully created.' })
-  async register(@Body() dto: RegisterDto) {
-    const user = await this.registerUserUseCase.execute(dto);
-    return {
-      success: true,
-      data: {
-        id: user.id,
-        email: user.email.getValue(),
-        name: user.name,
-        createdAt: user.createdAt,
-      },
-      meta: null,
-    };
+  async register(@Body() body: any) {
+    return this.authService.register(body);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login and get tokens' })
-  @ApiResponse({ status: 200, description: 'Successfully logged in.' })
-  async login(@Body() dto: LoginDto) {
-    const tokens = await this.loginUseCase.execute(dto);
-    return {
-      success: true,
-      data: tokens,
-      meta: null,
-    };
+  async login(@Body() body: any) {
+    return this.authService.login(body);
+  }
+
+  @Post('google')
+  async googleLogin(@Body('token') token: string) {
+    return this.authService.googleLogin(token);
+  }
+
+  @Post('refresh')
+  async refreshTokens(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshTokens(refreshToken);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@Request() req: any) {
+    // req.user is populated by JwtStrategy
+    return req.user;
   }
 }
